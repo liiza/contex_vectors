@@ -4,7 +4,7 @@ from datetime import datetime
 from collections import Counter
 
 WINDOW_SIZE = 4
-MAX_LINES = 2000
+MAX_LINES = 1000
 
 
 def build_semantic_vectors():
@@ -16,6 +16,9 @@ def build_semantic_vectors():
     }
     """
     co_occurence_vectors = {}
+    # How often does each word appear in word pairs
+    # This is purely an optimization
+    occurences = {}
     words = []
     lines_read = 0
 
@@ -28,6 +31,7 @@ def build_semantic_vectors():
         words.extend([
             clean_word(w.lower()) for w in line.split()
         ])
+        words = list(filter(None, words))
 
         for i in range(len(words) - (WINDOW_SIZE - 1)):
             nearby_words = words[i:i + WINDOW_SIZE]
@@ -40,14 +44,17 @@ def build_semantic_vectors():
                     neighbour_frequences = co_occurence_vectors.setdefault(neighbour, {})
                     neighbour_frequences[word] = neighbour_frequences.get(word, 0) + 1
 
+                    occurences[word] = occurences.get(word, 0) + 1
+                    occurences[neighbour] = occurences.get(neighbour, 0) + 1
+
         words = words[-(WINDOW_SIZE-1):]
     file.close()
-    return co_occurence_vectors
+    return (co_occurence_vectors, occurences)
 
 def clean_word(word):
-    return re.sub(r"(\?|\/|\||\"|\.|\,|\!)", "", word)
+    return re.sub(r"(\d|\'|\“|\-|\;|\?|\/|\||\"|\.|\,|\!)", "", word)
 
-def build_distance_matrix(co_occurence_vectors):
+def build_distance_matrix(co_occurence_vectors, occurences):
     """Build a distance matrix in following format
     {('apple', 'computer'): 0.9, ('apple', 'pearch'): 0.7}"""
     distances = {}
@@ -62,18 +69,18 @@ def build_distance_matrix(co_occurence_vectors):
             v1 = []
             v2 = []
             for key, value in v1_dict.items():
-                probability_of_key = sum(co_occurence_vectors[key].values()) / pairs_count
+                probability_of_key = occurences[key] / pairs_count
 
                 v1.append(
                     math.log(
                         (value / pairs_count) 
                         / 
                         (
-                            (sum(v1_dict.values()) / pairs_count)
+                            (occurences[words[i]] / pairs_count)
                             *
                             probability_of_key
                         )
-                    )
+                    , 2)
                 )
 
                 if key not in v2_dict:
@@ -85,17 +92,16 @@ def build_distance_matrix(co_occurence_vectors):
                         (v2_dict[key] / pairs_count) 
                         /
                         ( 
-                            (sum(v2_dict.values()) / pairs_count)
+                            (occurences[words[j]] / pairs_count)
                             *
                             probability_of_key
                         )
-                    )
+                    , 2)
                 )
             distances[(words[i], words[j])] = cosine(v1, v2)
     return distances
-   
+ 
 def cosine(v, v2):
-    assert len(v) == len(v2), "Vectors must be same length"
     sum_of_products = 0
     for i in range(len(v)):
         sum_of_products += v[i] * v2[i]
@@ -104,19 +110,25 @@ def cosine(v, v2):
     if sum_of_products == 0:
         return 0
 
-    sum_of_squares = sum([x ** 2 for x in v]) 
-    sum_of_squares2 = sum([x ** 2 for x in v2])
-    return sum_of_products / (sum_of_squares * sum_of_squares2)
+    sum_of_squares = 0
+    sum_of_squares2 = 0
+ 
+    for i in range(len(v)):
+        sum_of_squares += v[i] ** 2 
+        sum_of_squares2 += v2[i] ** 2
+ 
+    return sum_of_products / (math.sqrt(sum_of_squares) * math.sqrt(sum_of_squares2))
 
 def main():
     before = datetime.now()
     print(before)
-    vectors = build_semantic_vectors()   
+    vectors, occurences = build_semantic_vectors()   
     print(f'Building semantic vectors took {(datetime.now() - before).total_seconds()}s')
     before = datetime.now()
-    distances = build_distance_matrix(vectors).items()
+    distances = build_distance_matrix(vectors, occurences).items()
     print(f'Calculating distances took {(datetime.now() - before).total_seconds()}s')
     s = sorted(distances, key=lambda t: t[1], reverse=True)
     print("\n".join([str(t) for t in s]))
 
-main()
+if __name__ == '__main__':
+    main()
