@@ -19,7 +19,7 @@ cat : { cute: 9, furry: 4, miau: 4}
 
 Note the code is optimized for speed, not for readability!
 
-Enough of the technic here are some results. As you might notice they are not glorius, but seem better to me than random.
+Here are some results. As you might notice they are not glorious, but seem better to me than random.
 In order to train these vectors I used 10000 lines of first Harry Potter book. `X` means no semantic similarity `Y` means
 that I see some similarity, even though the words are not exact synonyms.
 
