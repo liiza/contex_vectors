@@ -1,3 +1,0 @@
-2017-11-25 21:17:49.074041
-Building semantic vectors took 0.200863s
-2371

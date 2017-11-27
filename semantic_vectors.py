@@ -4,7 +4,7 @@ from datetime import datetime
 from collections import Counter
 
 WINDOW_SIZE = 4
-MAX_LINES = 1000
+MAX_LINES = 10000
 
 
 def build_semantic_vectors():
@@ -52,16 +52,15 @@ def build_semantic_vectors():
     return (co_occurence_vectors, occurences)
 
 def clean_word(word):
-    return re.sub(r"(\d|\'|\“|\-|\;|\?|\/|\||\"|\.|\,|\!)", "", word)
+    return re.sub(r"(\—|\(|\)|\:|\d|\'|\’|\“|\”|\-|;|\?|\/|\||\"|\.|\,|\!|\`)", "", word)
 
 def build_distance_matrix(co_occurence_vectors, occurences):
     """Build a distance matrix in following format
     {('apple', 'computer'): 0.9, ('apple', 'pearch'): 0.7}"""
     distances = {}
     words = sorted(co_occurence_vectors.keys())
-    print(len(words))
     pairs_count = sum(len(value) for value in co_occurence_vectors.values())
-
+    print(len(words))
     for i in range(len(words)):
         for j in range(i + 1, len(words)):
             v1_dict = co_occurence_vectors[words[i]]    
@@ -98,7 +97,7 @@ def build_distance_matrix(co_occurence_vectors, occurences):
                         )
                     , 2)
                 )
-            distances[(words[i], words[j])] = cosine(v1, v2)
+            distances[(words[i], words[j])] = max(cosine(v1, v2), 0)
     return distances
  
 def cosine(v, v2):
