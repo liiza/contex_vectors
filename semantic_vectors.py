@@ -3,8 +3,8 @@ import math
 from datetime import datetime
 from collections import Counter
 
-WINDOW_SIZE = 4
-MAX_LINES = 10000
+WINDOW_SIZE = 7
+MAX_LINES = 20000
 
 
 def build_semantic_vectors():
@@ -21,7 +21,11 @@ def build_semantic_vectors():
     occurences = {}
     words = []
     lines_read = 0
+    stop_words = []
 
+    with open('stop_words.txt', 'r') as stop_words_file:
+        stop_words = [line.strip() for line in stop_words_file if not line.startswith("//")]
+    
     file = open('book_1.txt', 'r')
     for line in file:
         if lines_read == MAX_LINES:
@@ -31,7 +35,10 @@ def build_semantic_vectors():
         words.extend([
             clean_word(w.lower()) for w in line.split()
         ])
-        words = list(filter(None, words))
+        words = [
+            word for word in words 
+            if word and word not in stop_words
+        ]
 
         for i in range(len(words) - (WINDOW_SIZE - 1)):
             nearby_words = words[i:i + WINDOW_SIZE]
@@ -122,7 +129,11 @@ def main():
     before = datetime.now()
     print(before)
     vectors, occurences = build_semantic_vectors()   
+    with open('vectors', 'w') as file:
+        file.write(str(vectors))
+ 
     print(f'Building semantic vectors took {(datetime.now() - before).total_seconds()}s')
+    print(f'Window size {WINDOW_SIZE} and max lines {MAX_LINES}')
     before = datetime.now()
     distances = build_distance_matrix(vectors, occurences).items()
     print(f'Calculating distances took {(datetime.now() - before).total_seconds()}s')
