@@ -2,7 +2,7 @@ Teaching computer word meanings with Harry Potter with context vectors.
 
 ## Context Vectors 
 
-In this simple demo we teach the computer word semantics using context vectors. This means that for each word we compose a vector which contains the words this word most often appears with in the given text. After this the similarity of two words can be calculated as the cosine distances of their corresponding vectors.
+In this simple demo we teach the computer word semantics using context vectors. This means that for each word we compose a vector which contains the words this word most often appears with in the given text. After this the similarity of two words can be calculated as the cosine distances of their context vectors.
 
 To clarify this, let's walk through a simple example.
 In this example the words `apple` and `computer` are more similar to each other than `apple` and `cat`.
