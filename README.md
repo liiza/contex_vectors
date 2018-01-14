@@ -1,7 +1,7 @@
 # Natural Language Processing
 Teaching computer word meanings with Harry Potter
 
-## Sematic Vectors 
+## Semantic Vectors 
 
 In this simple demo I'm trying to understand the word semantics using context vectors.
 This means each word is build a vector of with which words does the word most often appear with.
